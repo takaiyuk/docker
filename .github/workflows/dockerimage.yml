@@ -1,0 +1,33 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches:
+      - "*"
+
+env:
+  TABLE_IMAGE_NAME: table
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build image
+      run: docker build . -t table -f ./table/Dockerfile
+    - name: Log into registry
+      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ github.actor }} --password-stdin
+    - name: Push image
+      run: |
+        IMAGE_ID=${{ github.actor }}/$TABLE_IMAGE_NAME
+        # Strip git ref prefix from version
+        BRANCH_NAME=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+        # Use Docker `latest` tag convention
+        [ "$BRANCH_NAME" == "master" ] && IMAGE_TAG=latest
+        [ "$BRANCH_NAME" == "develop" ] && IMAGE_TAG=stg
+        [ "$BRANCH_NAME" != "master" ] && [ "$BRANCH_NAME" != "develop" ] && IMAGE_TAG=dev
+        
+        echo IMAGE_ID=$IMAGE_ID
+        echo IMAGE_TAG=$IMAGE_TAG
+        docker tag image $IMAGE_ID:$IMAGE_TAG
+        docker push $IMAGE_ID:$IMAGE_TAG
