@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build image
-      run: docker build . -t table -f ./table/Dockerfile
+      run: cp ./table/requirements.txt . && docker build . -t table -f ./table/Dockerfile
     - name: Log into registry
       run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ github.actor }} --password-stdin
     - name: Push image
