@@ -5,32 +5,56 @@ $ tree
 .
 ├── README.md
 ├── cpu
-│   ├── image
-│   │   └── Dockerfile
-│   ├── multimodal
-│   │   └── Dockerfile
-│   ├── nlp
-│   │   └── Dockerfile
-│   ├── nlp-ja
-│   │   └── Dockerfile
-│   ├── nn
-│   │   └── Dockerfile
-│   └── table
-│       ├── Dockerfile
-│       └── requirements.txt
+│   ├── image
+│   │   ├── Dockerfile
+│   │   └── setup.py
+│   ├── multimodal
+│   │   ├── Dockerfile
+│   │   ├── requirements.txt
+│   │   └── setup.py
+│   ├── multimodal-ja
+│   │   ├── Dockerfile
+│   │   ├── requirements.txt
+│   │   └── setup.py
+│   ├── nlp
+│   │   ├── Dockerfile
+│   │   └── setup.py
+│   ├── nlp-ja
+│   │   ├── Dockerfile
+│   │   └── setup.py
+│   ├── nn
+│   │   ├── Dockerfile
+│   │   └── setup.py
+│   └── table
+│       ├── Dockerfile
+│       ├── requirements.txt
+│       └── setup.py
 └── gpu
     ├── image
-    │   └── Dockerfile
+    │   ├── Dockerfile
+    │   └── setup.py
     ├── lightgbm-gpu
-    │   └── Dockerfile
+    │   └── Dockerfile
     ├── multimodal
-    │   └── Dockerfile
+    │   ├── Dockerfile
+    │   ├── requirements.txt
+    │   └── setup.py
+    ├── multimodal-ja
+    │   ├── Dockerfile
+    │   ├── requirements.txt
+    │   └── setup.py
     ├── nlp
-    │   └── Dockerfile
+    │   ├── Dockerfile
+    │   └── setup.py
     ├── nlp-ja
-    │   └── Dockerfile
+    │   ├── Dockerfile
+    │   └── setup.py
     ├── nn
-    │   └── Dockerfile
+    │   ├── Dockerfile
+    │   └── setup.py
     └── table
-        └── Dockerfile
+        ├── Dockerfile
+        └── setup.py
+
+17 directories, 35 files
 ```
