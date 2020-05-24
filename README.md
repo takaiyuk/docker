@@ -7,6 +7,8 @@ $ tree
 ├── cpu
 │   ├── image
 │   │   └── Dockerfile
+│   ├── multimodal
+│   │   └── Dockerfile
 │   ├── nlp
 │   │   └── Dockerfile
 │   ├── nlp-ja
@@ -20,6 +22,8 @@ $ tree
     ├── image
     │   └── Dockerfile
     ├── lightgbm-gpu
+    │   └── Dockerfile
+    ├── multimodal
     │   └── Dockerfile
     ├── nlp
     │   └── Dockerfile
