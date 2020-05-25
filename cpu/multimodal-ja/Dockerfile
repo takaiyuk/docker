@@ -4,11 +4,11 @@
 # jupyter notebook list
 FROM python:3.7.7-slim
 ENV APP_HOME /workspace
-ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR $APP_HOME
 COPY requirements.txt $APP_HOME
+COPY setup.py $APP_HOME
 RUN apt-get update -y \
-    && apt-get install -y clang cmake curl file git nodejs npm sudo unzip vim wget xz-utils zip \
+    && apt-get install -y clang cmake curl file git libopencv-dev nodejs npm sudo unzip vim wget xz-utils zip \
     # MeCab
     && apt-get install -y mecab libmecab-dev mecab-ipadic mecab-ipadic-utf8 \
     # mecab-ipadic-NEologd
@@ -58,11 +58,15 @@ RUN apt-get update -y \
     && pip install --upgrade pip \
     && pip install -r requirements.txt \
     # jupyter extensions
+    && export NODE_OPTIONS=--max-old-space-size=4096 \
     && jupyter labextension install @jupyterlab/toc \
-    && jupyter nbextension enable --py widgetsnbextension
+    && jupyter nbextension enable --py widgetsnbextension \
+    # Clean
+    && apt-get -y remove clang cmake file nodejs npm xz-utils zip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 CMD jupyter lab \
     --no-browser \
     --port=8888 \
     --ip=0.0.0.0 \
     --allow-root
-
