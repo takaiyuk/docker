@@ -49,7 +49,7 @@ RUN apt-get update -y \
     && ldconfig \
     # fastText
     && pip install git+https://github.com/facebookresearch/fastText.git \
-    # LighGBM
+    # LightGBM
     && git clone --recursive https://github.com/microsoft/LightGBM && cd LightGBM && mkdir build && cd build && cmake .. && make -j4 && cd ../python-package && python setup.py install && cd ../.. && rm -r LightGBM \
     # XGBoost
     && git clone --recursive https://github.com/dmlc/xgboost && cd xgboost && mkdir build && cd build && cmake .. && make -j$(nproc) && cd ../python-package && python setup.py install && cd ../.. && rm -r xgboost \

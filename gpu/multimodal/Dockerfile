@@ -10,11 +10,17 @@ WORKDIR $APP_HOME
 COPY requirements.txt $APP_HOME
 COPY setup.py $APP_HOME
 RUN apt-get update -y \
-    && apt-get install -y clang cmake curl git libopencv-dev nodejs npm unzip vim wget \
+    && apt-get install -y --no-install-recommends clang cmake curl git libopencv-dev nodejs npm unzip vim wget \
     # fastText
     && pip install git+https://github.com/facebookresearch/fastText.git \
-    # LighGBM
-    && git clone --recursive https://github.com/microsoft/LightGBM && cd LightGBM && mkdir build && cd build && cmake .. && make -j4 && cd ../python-package && python setup.py install && cd ../.. && rm -r LightGBM \
+    # LightGBM GPU
+    && cd /usr/local/src && mkdir lightgbm && cd lightgbm \
+    && git clone --recursive --branch stable --depth 1 https://github.com/microsoft/LightGBM \
+    && cd LightGBM && mkdir build && cd build \
+    && cmake -DUSE_GPU=1 -DOpenCL_LIBRARY=/usr/local/cuda/lib64/libOpenCL.so -DOpenCL_INCLUDE_DIR=/usr/local/cuda/include/ .. \
+    && make OPENCL_HEADERS=/usr/local/cuda-8.0/targets/x86_64-linux/include LIBOPENCL=/usr/local/cuda-8.0/targets/x86_64-linux/lib \
+    && /bin/bash -c "cd /usr/local/src/lightgbm/LightGBM/python-package && python setup.py install --precompile" \
+    && rm -r /usr/local/src/lightgbm \
     # requirements.txt
     && cd $APP_HOME \
     && pip install --upgrade pip \
