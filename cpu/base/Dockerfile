@@ -24,7 +24,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --from=builder /usr/local/share/jupyter /usr/local/share/jupyter
 COPY --from=builder /usr/lib/x86_64-linux-gnu/libgomp.so.1 /usr/lib/x86_64-linux-gnu/libgomp.so.1
 RUN apt-get -y update \
-  && apt-get -y install git vim \
+  && apt-get -y install curl git unzip vim wget \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
   && mkdir /root/.kaggle
