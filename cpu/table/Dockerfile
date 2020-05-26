@@ -1,5 +1,5 @@
-# docker build . -t table -f ./Dockerfile
-# docker run -d --name ${CONTAINER_NAME} -p 8888:8899 -v ${PWD}:/workspace/ -v ${HOME}/.kaggle:/root/.kaggle/ table
+# docker build . -t takaiyuk/ml-table -f ./Dockerfile
+# docker run -d --name ${CONTAINER_NAME} -p 8888:8899 -v ${PWD}:/workspace/ -v ${HOME}/.kaggle:/root/.kaggle/ takaiyuk/ml-table
 # docker exec -it ${CONTAINER_ID} /bin/bash
 # jupyter notebook list
 FROM takaiyuk/ml-base:latest
