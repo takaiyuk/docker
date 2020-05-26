@@ -1,5 +1,5 @@
-# docker build . -t ${IMAGE_NAME} -f ./Dockerfile
-# docker run -d --name ${CONTAINER_NAME} -p 8888:8899 -v ${PWD}:/workspace/ -v ${HOME}/.kaggle:/root/.kaggle/ ${IMAGE_NAME}
+# docker build . -t takaiyuk/ml-base -f ./Dockerfile
+# docker run -d --name ${CONTAINER_NAME} -p 8888:8899 -v ${PWD}:/workspace/ -v ${HOME}/.kaggle:/root/.kaggle/ takaiyuk/ml-base
 # docker exec -it ${CONTAINER_ID} /bin/bash
 # jupyter notebook list
 FROM python:3.8.3-buster as builder
