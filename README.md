@@ -5,6 +5,10 @@ $ tree
 .
 ├── README.md
 ├── cpu
+│   ├── base
+│   │   ├── Dockerfile
+│   │   ├── requirements.txt
+│   │   └── setup.py
 │   ├── image
 │   │   ├── Dockerfile
 │   │   └── setup.py
@@ -21,15 +25,17 @@ $ tree
 │   │   └── setup.py
 │   ├── nlp-ja
 │   │   ├── Dockerfile
-│   │   └── setup.py
-│   ├── nn
-│   │   ├── Dockerfile
+│   │   ├── requirements.txt
 │   │   └── setup.py
 │   └── table
 │       ├── Dockerfile
 │       ├── requirements.txt
 │       └── setup.py
 └── gpu
+    ├── base
+    │   ├── Dockerfile
+    │   ├── requirements.txt
+    │   └── setup.py
     ├── image
     │   ├── Dockerfile
     │   └── setup.py
@@ -49,12 +55,9 @@ $ tree
     ├── nlp-ja
     │   ├── Dockerfile
     │   └── setup.py
-    ├── nn
-    │   ├── Dockerfile
-    │   └── setup.py
     └── table
         ├── Dockerfile
         └── setup.py
 
-17 directories, 35 files
+17 directories, 38 files
 ```
