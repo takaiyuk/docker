@@ -6,11 +6,11 @@ FROM takaiyuk/ml-base-gpu:latest
 ENV APP_HOME /workspace
 WORKDIR $APP_HOME
 # COPY requirements.txt $APP_HOME
-# RUN apt-get -y update \
-#   && apt-get -y install hoge \
-#   && pip install -r requirements.txt \
-#   && apt-get clean \
-#   && rm -rf /var/lib/apt/lists/*
+# RUN sudo apt-get -y update \
+#   && sudo apt-get -y install hoge \
+#   && sudo pip install -r requirements.txt \
+#   && sudo apt-get clean \
+#   && sudo rm -rf /var/lib/apt/lists/*
 CMD jupyter lab \
   --no-browser \
   --port=8888 \
