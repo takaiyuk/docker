@@ -1,5 +1,5 @@
 # docker build . -t takaiyuk/ml-multimodal-ja -f ./Dockerfile
-# docker run -d --name ${CONTAIINER_NAME} -p 8888:8888 -v ${PWD}:/workspace/ takaiyuk/ml-multimodal-ja
+# docker run -d --name ${CONTAINER_NAME} -p 8888:8888 -v ${PWD}:/workspace/ takaiyuk/ml-multimodal-ja
 # docker exec -it ${CONTAINER_ID} /bin/bash
 # jupyter notebook list
 FROM takaiyuk/ml-base:latest

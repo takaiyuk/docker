@@ -1,5 +1,5 @@
 # docker build . -t nlp-ja -f ./Dockerfile
-# docker run -d --name ${CONTAIINER_NAME} -p 8888:8888 -v ${PWD}:/workspace/ nlp-ja
+# docker run -d --name ${CONTAINER_NAME} -p 8888:8888 -v ${PWD}:/workspace/ nlp-ja
 # docker exec -it ${CONTAINER_ID} /bin/bash
 # jupyter notebook list
 FROM python:3.7.7-slim

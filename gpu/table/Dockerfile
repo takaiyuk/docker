@@ -4,13 +4,16 @@
 # jupyter notebook list
 FROM takaiyuk/ml-base-gpu:latest
 ENV APP_HOME /workspace
+ENV TZ Asia/Tokyo
+ENV DEBIAN_FRONTEND noninteractive
 WORKDIR $APP_HOME
 # COPY requirements.txt $APP_HOME
-# RUN apt-get -y update \
-#   && apt-get -y install hoge \
+# RUN sudo ln -sf /usr/share/zoneinfo/$TZ /etc/localtime \
+#   && sudo apt-get -y update \
+#   && sudo apt-get -y install hoge \
 #   && pip install -r requirements.txt \
-#   && apt-get clean \
-#   && rm -rf /var/lib/apt/lists/*
+#   && sudo apt-get clean \
+#   && sudo rm -rf /var/lib/apt/lists/*
 CMD jupyter lab \
   --no-browser \
   --port=8888 \
