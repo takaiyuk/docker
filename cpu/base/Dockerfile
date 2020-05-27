@@ -1,5 +1,5 @@
 # docker build . -t takaiyuk/ml-base -f ./Dockerfile
-# https://future-architect.github.io/articles/20200513/
+# ref.) https://future-architect.github.io/articles/20200513/
 FROM python:3.8.3-buster as builder
 ENV APP_HOME /workspace
 WORKDIR $APP_HOME
