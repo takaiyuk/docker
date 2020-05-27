@@ -1,5 +1,5 @@
 # docker build . -t takaiyuk/multimodal-ja -f ./Dockerfile
-# docker run -d --name ${CONTAIINER_NAME} -p 8888:8899 -v ${PWD}:/workspace/ takaiyuk/multimodal-ja
+# docker run -d --name ${CONTAIINER_NAME} -p 8888:8888 -v ${PWD}:/workspace/ takaiyuk/multimodal-ja
 # docker exec -it ${CONTAINER_ID} /bin/bash
 # jupyter notebook list
 FROM takaiyuk/ml-base:latest
@@ -58,5 +58,6 @@ RUN apt-get update -y \
     && rm -rf /var/lib/apt/lists/*
 CMD jupyter lab \
     --no-browser \
+    --port=8888 \
     --ip=0.0.0.0 \
     --allow-root
