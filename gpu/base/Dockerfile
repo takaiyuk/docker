@@ -1,6 +1,4 @@
 # docker build . -t takaiyuk/ml-base-gpu -f ./Dockerfile
-# docker run -d --name ${CONTAINER_NAME} -p 8888:8899 -v ${PWD}:/workspace/ -v ${HOME}/.kaggle:/root/.kaggle/ takaiyuk/ml-base-gpu
-# docker exec -it ${CONTAINER_ID} /bin/bash
 # https://medium.com/the-artificial-impostor/smaller-docker-image-using-multi-stage-build-cb462e349968
 FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu18.04 as builder
 ARG PYTHON_VERSION=3.7.6
