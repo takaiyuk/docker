@@ -30,8 +30,6 @@ $ tree
     │   └── requirements.txt
     ├── image
     │   └── Dockerfile
-    ├── lightgbm-gpu
-    │   └── Dockerfile
     ├── multimodal
     │   ├── Dockerfile
     │   └── requirements.txt
@@ -43,7 +41,8 @@ $ tree
     ├── nlp-ja
     │   └── Dockerfile
     └── table
-        └── Dockerfile
+        ├── Dockerfile
+        └── requirements.txt
 
-17 directories, 24 files
+16 directories, 24 files
 ```
