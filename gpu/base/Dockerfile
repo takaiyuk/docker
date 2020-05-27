@@ -1,5 +1,5 @@
 # docker build . -t takaiyuk/ml-base-gpu -f ./Dockerfile
-# docker run -d --name ${CONTAINER_NAME} -p 8888:8899 -v ${PWD}:/workspace/ -v ${HOME}/.kaggle:/root/.kaggle/ takaiyuk/ml-base
+# docker run -d --name ${CONTAINER_NAME} -p 8888:8899 -v ${PWD}:/workspace/ -v ${HOME}/.kaggle:/root/.kaggle/ takaiyuk/ml-base-gpu
 # docker exec -it ${CONTAINER_ID} /bin/bash
 # https://medium.com/the-artificial-impostor/smaller-docker-image-using-multi-stage-build-cb462e349968
 FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu18.04 as builder
@@ -22,13 +22,17 @@ RUN apt-get update \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
   # Install python packages
+  && conda update -n base -c defaults conda \
   && conda config --add channels anaconda \
   && conda config --add channels conda-forge \
   && conda config --add channels pytorch \
   && conda install -y python=$PYTHON_VERSION \
   && conda install -y --file requirements.txt \
   && conda clean -tipsy \
-  # Lightgbm
+  # LightGBM
+  # Add OpenCL ICD files for LightGBM
+  && mkdir -p /etc/OpenCL/vendors \
+  && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd \
   && cd /usr/local/src && mkdir lightgbm && cd lightgbm \
   && git clone --recursive --branch stable --depth 1 https://github.com/microsoft/LightGBM \
   && cd LightGBM && mkdir build && cd build \
@@ -45,6 +49,7 @@ ENV CUDA_HOME=/usr/local/cuda
 ENV CUDA_ROOT=$CUDA_HOME
 ENV PATH=$PATH:$CUDA_ROOT/bin:$HOME/bin
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CUDA_ROOT/lib64
+COPY --from=builder /etc/OpenCL/vendors /etc/OpenCL/vendors
 # Instal basic utilities
 RUN apt-get update \
   && apt-get install -y --no-install-recommends git wget unzip bzip2 sudo p7zip vim \
