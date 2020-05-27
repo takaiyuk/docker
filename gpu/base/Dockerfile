@@ -1,5 +1,5 @@
 # docker build . -t takaiyuk/ml-base-gpu -f ./Dockerfile
-# https://medium.com/the-artificial-impostor/smaller-docker-image-using-multi-stage-build-cb462e349968
+# ref.) https://medium.com/the-artificial-impostor/smaller-docker-image-using-multi-stage-build-cb462e349968
 FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu18.04 as builder
 ARG PYTHON_VERSION=3.7.6
 ARG CONDA_PYTHON_VERSION=3
@@ -28,9 +28,7 @@ RUN apt-get update \
   && conda install -y --file requirements.txt \
   && conda clean -tipsy \
   # LightGBM
-  # Add OpenCL ICD files for LightGBM
-  && mkdir -p /etc/OpenCL/vendors \
-  && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd \
+  # ref.) https://github.com/microsoft/LightGBM/blob/master/docker/gpu/dockerfile.gpu
   && cd /usr/local/src && mkdir lightgbm && cd lightgbm \
   && git clone --recursive --branch stable --depth 1 https://github.com/microsoft/LightGBM \
   && cd LightGBM && mkdir build && cd build \
@@ -47,7 +45,6 @@ ENV CUDA_HOME=/usr/local/cuda
 ENV CUDA_ROOT=$CUDA_HOME
 ENV PATH=$PATH:$CUDA_ROOT/bin:$HOME/bin
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CUDA_ROOT/lib64
-COPY --from=builder /etc/OpenCL/vendors /etc/OpenCL/vendors
 # Instal basic utilities
 RUN apt-get update \
   && apt-get install -y --no-install-recommends git wget unzip bzip2 sudo p7zip vim \
@@ -63,3 +60,6 @@ USER $USERNAME
 WORKDIR /home/$USERNAME
 # Docker cannot handle --chown=$USERID
 COPY --chown=1000 --from=builder /opt/conda/. $CONDA_DIR
+COPY --from=builder /usr/local/cuda/lib64/libOpenCL.so.1 /usr/local/cuda/lib64/libOpenCL.so.1
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libboost_system.so.1.65.1 /usr/local/cuda/lib64/libboost_system.so.1.65.1
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.65.1 /usr/local/cuda/lib64/libboost_filesystem.so.1.65.1
