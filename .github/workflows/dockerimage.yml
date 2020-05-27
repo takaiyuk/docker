@@ -3,10 +3,10 @@ name: Docker Image CI
 on:
   push:
     branches:
-      - "*"
+      - "master"
 
 env:
-  TABLE_IMAGE_NAME: table
+  BASE_IMAGE_NAME: base
 
 jobs:
   build-and-push:
@@ -15,12 +15,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build image
-      run: cp ./table/requirements.txt . && docker build . -t table -f ./table/Dockerfile
+      run: cd ./cpu/base && docker build . -t ml-$BASE_IMAGE_NAME -f ./Dockerfile && cd ../../gpu/base && docker build . -t ml-$BASE_IMAGE_NAME-gpu -f ./Dockerfile
     - name: Log into registry
       run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ github.actor }} --password-stdin
     - name: Push image
       run: |
-        IMAGE_ID=${{ github.actor }}/$TABLE_IMAGE_NAME
+        IMAGE_ID=${{ github.actor }}/ml-$BASE_IMAGE_NAME
         # Strip git ref prefix from version
         BRANCH_NAME=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
         # Use Docker `latest` tag convention
@@ -32,3 +32,7 @@ jobs:
         echo IMAGE_TAG=$IMAGE_TAG
         docker tag image $IMAGE_ID:$IMAGE_TAG
         docker push $IMAGE_ID:$IMAGE_TAG
+        echo IMAGE_ID=$IMAGE_ID-gpu
+        echo IMAGE_TAG=$IMAGE_TAG
+        docker tag image $IMAGE_ID-gpu:$IMAGE_TAG
+        docker push $IMAGE_ID-gpu:$IMAGE_TAG
