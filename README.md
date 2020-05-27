@@ -7,57 +7,43 @@ $ tree
 ├── cpu
 │   ├── base
 │   │   ├── Dockerfile
-│   │   ├── requirements.txt
-│   │   └── setup.py
+│   │   └── requirements.txt
 │   ├── image
-│   │   ├── Dockerfile
-│   │   └── setup.py
+│   │   └── Dockerfile
 │   ├── multimodal
 │   │   ├── Dockerfile
-│   │   ├── requirements.txt
-│   │   └── setup.py
+│   │   └── requirements.txt
 │   ├── multimodal-ja
 │   │   ├── Dockerfile
-│   │   ├── requirements.txt
-│   │   └── setup.py
+│   │   └── requirements.txt
 │   ├── nlp
-│   │   ├── Dockerfile
-│   │   └── setup.py
+│   │   └── Dockerfile
 │   ├── nlp-ja
 │   │   ├── Dockerfile
-│   │   ├── requirements.txt
-│   │   └── setup.py
+│   │   └── requirements.txt
 │   └── table
 │       ├── Dockerfile
-│       ├── requirements.txt
-│       └── setup.py
+│       └── requirements.txt
 └── gpu
     ├── base
     │   ├── Dockerfile
-    │   ├── requirements.txt
-    │   └── setup.py
+    │   └── requirements.txt
     ├── image
-    │   ├── Dockerfile
-    │   └── setup.py
+    │   └── Dockerfile
     ├── lightgbm-gpu
     │   └── Dockerfile
     ├── multimodal
     │   ├── Dockerfile
-    │   ├── requirements.txt
-    │   └── setup.py
+    │   └── requirements.txt
     ├── multimodal-ja
     │   ├── Dockerfile
-    │   ├── requirements.txt
-    │   └── setup.py
+    │   └── requirements.txt
     ├── nlp
-    │   ├── Dockerfile
-    │   └── setup.py
+    │   └── Dockerfile
     ├── nlp-ja
-    │   ├── Dockerfile
-    │   └── setup.py
+    │   └── Dockerfile
     └── table
-        ├── Dockerfile
-        └── setup.py
+        └── Dockerfile
 
-17 directories, 38 files
+17 directories, 24 files
 ```

@@ -6,7 +6,6 @@ FROM takaiyuk/ml-base:latest
 ENV APP_HOME /workspace
 WORKDIR $APP_HOME
 COPY requirements.txt $APP_HOME
-COPY setup.py $APP_HOME
 RUN apt-get update -y \
     && apt-get install -y clang cmake curl file g++ libopencv-dev sudo unzip wget xz-utils zip \
     # MeCab

@@ -6,7 +6,6 @@ FROM takaiyuk/ml-base:latest
 ENV APP_HOME /workspace
 WORKDIR $APP_HOME
 # COPY requirements.txt $APP_HOME
-# COPY setup.py $APP_HOME
 # RUN apt-get -y update \
 #   && apt-get -y install hoge \
 #   && pip install -r requirements.txt \
