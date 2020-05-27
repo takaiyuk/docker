@@ -4,16 +4,19 @@
 # jupyter notebook list
 FROM takaiyuk/ml-base-gpu:latest
 ENV APP_HOME /workspace
+ENV TZ Asia/Tokyo
+ENV DEBIAN_FRONTEND noninteractive
 WORKDIR $APP_HOME
 COPY requirements.txt $APP_HOME
-RUN sudo apt-get update -y \
-    && sudo apt-get install -y clang cmake g++ libopencv-dev \
+RUN sudo ln -sf /usr/share/zoneinfo/$TZ /etc/localtime \
+    && sudo apt-get update -y \
+    && sudo apt-get install -y --no-install-recommends clang cmake g++ libopencv-dev \
     # fastText
-    && sudo pip install git+https://github.com/facebookresearch/fastText.git \
+    && pip install git+https://github.com/facebookresearch/fastText.git \
     # requirements.txt
     && cd $APP_HOME \
-    && sudo pip install --upgrade pip \
-    && sudo pip install -r requirements.txt \
+    && pip install --upgrade pip \
+    && pip install -r requirements.txt \
     # Clean
     && sudo apt-get -y remove clang cmake g++ \
     && sudo apt-get clean \
