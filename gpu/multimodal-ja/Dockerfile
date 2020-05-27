@@ -8,7 +8,6 @@ ENV APP_HOME /workspace
 ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR $APP_HOME
 COPY requirements.txt $APP_HOME
-COPY setup.py $APP_HOME
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends clang cmake curl file git libopencv-dev nodejs npm sudo unzip vim wget xz-utils zip \
     # MeCab

@@ -5,7 +5,6 @@ FROM python:3.8.3-buster as builder
 ENV APP_HOME /workspace
 WORKDIR $APP_HOME
 COPY requirements.txt $APP_HOME
-COPY setup.py $APP_HOME
 RUN apt-get -y update \
   && apt-get -y install clang cmake nodejs npm \
   && git clone --recursive https://github.com/microsoft/LightGBM && cd LightGBM && mkdir build && cd build && cmake .. && make -j4 && cd ../python-package && python setup.py install && cd ../.. && rm -r LightGBM \
