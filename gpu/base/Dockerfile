@@ -55,7 +55,9 @@ RUN apt-get update \
   && useradd --create-home -s /bin/bash --no-user-group -u $USERID $USERNAME \
   && chown $USERNAME $CONDA_DIR -R \
   && adduser $USERNAME sudo \
-  && echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+  && echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers \
+  # Make dir for kaggle
+  && mkdir /root/.kaggle
 USER $USERNAME
 WORKDIR /home/$USERNAME
 # Docker cannot handle --chown=$USERID
