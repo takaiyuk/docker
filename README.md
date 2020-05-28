@@ -29,7 +29,8 @@ $ tree
     │   ├── Dockerfile
     │   └── requirements.txt
     ├── image
-    │   └── Dockerfile
+    │   ├── Dockerfile
+    │   └── requirements.txt
     ├── multimodal
     │   ├── Dockerfile
     │   └── requirements.txt
@@ -44,5 +45,5 @@ $ tree
         ├── Dockerfile
         └── requirements.txt
 
-16 directories, 24 files
+16 directories, 25 files
 ```
