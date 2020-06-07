@@ -27,23 +27,41 @@ $ tree
 └── gpu
     ├── base
     │   ├── Dockerfile
+    │   ├── build.sh
+    │   ├── push.sh
     │   └── requirements.txt
     ├── image
     │   ├── Dockerfile
-    │   └── requirements.txt
+    │   ├── build.sh
+    │   ├── exec.sh
+    │   ├── push.sh
+    │   ├── requirements.txt
+    │   └── run.sh
     ├── multimodal
     │   ├── Dockerfile
-    │   └── requirements.txt
+    │   ├── build.sh
+    │   ├── exec.sh
+    │   ├── push.sh
+    │   ├── requirements.txt
+    │   └── run.sh
     ├── multimodal-ja
     │   ├── Dockerfile
-    │   └── requirements.txt
+    │   ├── build.sh
+    │   ├── exec.sh
+    │   ├── push.sh
+    │   ├── requirements.txt
+    │   └── run.sh
     ├── nlp
     │   └── Dockerfile
     ├── nlp-ja
     │   └── Dockerfile
     └── table
         ├── Dockerfile
-        └── requirements.txt
+        ├── build.sh
+        ├── exec.sh
+        ├── push.sh
+        ├── requirements.txt
+        └── run.sh
 
-16 directories, 25 files
+16 directories, 43 files
 ```
