@@ -1,17 +1,17 @@
-# docker build . -t takaiyuk/ml-multimodal-ja-gpu -f ./Dockerfile
-# docker run -d --name ${CONTAINER_NAME} -p 8888:8888 -v ${PWD}:/workspace/ takaiyuk/ml-multimodal-ja-gpu
-# docker exec -it ${CONTAINER_ID} /bin/bash
-# jupyter notebook list
+# ./build.sh
+# ./run.sh ${CONTAINER_NAME}
+# ./exec.sh ${CONTAINER_NAME}
+# . /venv/bin/activate && jupyter notebook list
 FROM takaiyuk/ml-base-gpu:latest
 ENV APP_HOME /workspace
 ENV TZ Asia/Tokyo
-ENV DEBIAN_FRONTEND noninteractive
+# ENV DEBIAN_FRONTEND noninteractive
 WORKDIR $APP_HOME
-COPY requirements.txt $APP_HOME
-USER root
+COPY requirements.txt .
 RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime \
+  && . /venv/bin/activate \
   && apt-get update -y \
-  && apt-get install -y --no-install-recommends clang cmake curl file gcc g++ libopencv-dev unzip wget xz-utils zip \
+  && apt-get install -y --no-install-recommends clang cmake curl file gcc g++ libopencv-dev sudo unzip wget xz-utils zip python3-dev \
   # MeCab
   && apt-get install -y --no-install-recommends mecab libmecab-dev mecab-ipadic mecab-ipadic-utf8 \
   # mecab-ipadic-NEologd
@@ -57,11 +57,11 @@ RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime \
   && pip install --upgrade pip \
   && pip install -r requirements.txt \
   # Clean
-  && apt-get -y remove clang cmake curl file gcc g++ xz-utils zip \
+  && apt-get -y remove clang cmake curl file gcc g++ xz-utils zip python3-dev \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
-USER $USERNAME
-CMD jupyter lab \
+CMD . /venv/bin/activate \
+  && jupyter lab \
   --no-browser \
   --port=8888 \
   --ip=0.0.0.0 \
