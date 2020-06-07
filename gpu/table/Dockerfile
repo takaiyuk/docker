@@ -3,11 +3,11 @@
 # ./exec.sh ${CONTAINER_NAME}
 # . /venv/bin/activate && jupyter notebook list
 FROM takaiyuk/ml-base-gpu:latest
-ENV APP_HOME /tf/notebooks
+ENV APP_HOME /workspace
 ENV TZ Asia/Tokyo
 WORKDIR $APP_HOME
-# COPY requirements.txt $APP_HOME
-# RUN sudo ln -sf /usr/share/zoneinfo/$TZ /etc/localtime \
+COPY requirements.txt $APP_HOME
+RUN sudo ln -sf /usr/share/zoneinfo/$TZ /etc/localtime
 #   && sudo apt-get -y update \
 #   && sudo apt-get -y install hoge \
 #   && pip install -r requirements.txt \
