@@ -12,7 +12,7 @@ ENV PATH /usr/local/src/lightgbm/LightGBM:${PATH}
 COPY requirements.txt .
 # Instal basic utilities
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends python-dev python-pip python3-setuptools virtualenv git wget unzip bzip2 build-essential ca-certificates cmake libboost-dev libboost-system-dev libboost-filesystem-dev gcc g++ \
+  && apt-get install -y --no-install-recommends python3-dev libssl-dev libffi-dev python3-pip python3-setuptools virtualenv git wget unzip bzip2 build-essential ca-certificates cmake libboost-dev libboost-system-dev libboost-filesystem-dev gcc g++ \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
   # Create venv
@@ -23,6 +23,9 @@ RUN apt-get update \
   # Install python packages
   && pip install -r requirements.txt \
   && pip install torch torchvision \
+  # Install cocoapi
+  && pip install Cython \
+  && mkdir coco && cd coco && git clone https://github.com/cocodataset/cocoapi && cd cocoapi/PythonAPI && make install && cd ../.. && rm -r cocoapi \
   # Add OpenCL ICD files for LightGBM
   && mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd \
   # LightGBM (ref.) https://github.com/microsoft/LightGBM/blob/master/docker/gpu/dockerfile.gpu
