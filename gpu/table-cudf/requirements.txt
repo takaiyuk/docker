@@ -1,0 +1,2 @@
+fsspec==0.6.3
+pyarrow==0.15.0
