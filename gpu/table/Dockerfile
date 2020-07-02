@@ -7,7 +7,7 @@ ENV APP_HOME /workspace
 ENV TZ Asia/Tokyo
 WORKDIR $APP_HOME
 COPY requirements.txt $APP_HOME
-RUN sudo ln -sf /usr/share/zoneinfo/$TZ /etc/localtime
+RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime
 #   && sudo apt-get -y update \
 #   && sudo apt-get -y install hoge \
 #   && pip install -r requirements.txt \
