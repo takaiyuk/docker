@@ -7,6 +7,7 @@ COPY requirements.txt $APP_HOME
 RUN apt-get -y update \
   && apt-get -y install clang cmake nodejs npm \
   && git clone --recursive https://github.com/microsoft/LightGBM && cd LightGBM && mkdir build && cd build && cmake .. && make -j4 && cd ../python-package && python setup.py install && cd ../.. && rm -r LightGBM \
+  && git clone https://github.com/pfnet-research/xfeat.git && cd xfeat && python setup.py install && cd .. && rm -r xfeat \
   && pip install -r requirements.txt \
   && export NODE_OPTIONS=--max-old-space-size=4096 \
   && jupyter labextension install @jupyterlab/toc \
