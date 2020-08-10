@@ -26,6 +26,8 @@ RUN apt-get update \
   # Install cocoapi
   && pip install Cython \
   && mkdir coco && cd coco && git clone https://github.com/cocodataset/cocoapi && cd cocoapi/PythonAPI && make install && cd ../.. && rm -r cocoapi \
+  # Install xfeat
+  && git clone https://github.com/pfnet-research/xfeat.git && cd xfeat && python setup.py install && cd .. && rm -r xfeat \
   # Add OpenCL ICD files for LightGBM
   && mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd \
   # LightGBM (ref.) https://github.com/microsoft/LightGBM/blob/master/docker/gpu/dockerfile.gpu
@@ -62,72 +64,3 @@ COPY --from=builder /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.65.1 /usr
 COPY --from=builder /usr/local/cuda-10.1/lib64/libOpenCL.so.1 /usr/local/cuda-10.1/lib64/libOpenCL.so.1
 COPY --from=builder /usr/local/cuda-10.1/targets/x86_64-linux/include /usr/local/cuda-10.1/targets/x86_64-linux/include
 COPY --from=builder /usr/local/cuda-10.1/targets/x86_64-linux/lib /usr/local/cuda-10.1/targets/x86_64-linux/lib
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# docker build . -t takaiyuk/ml-base-gpu -f ./Dockerfile
-# ref.) https://medium.com/the-artificial-impostor/smaller-docker-image-using-multi-stage-build-cb462e349968
-# FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04 as builder
-# ARG PYTHON_VERSION=3.6.9
-# ARG CUDA_VERSION=10.1
-# ENV CUDA_HOME /usr/local/cuda
-# ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${CUDA_HOME}/lib64
-# ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/usr/local/cuda-$CUDA_VERSION/lib64
-# ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/usr/local/lib
-# ENV OPENCL_LIBRARIES /usr/local/cuda/lib64
-# ENV OPENCL_INCLUDE_DIR /usr/local/cuda/include
-# ENV PATH /usr/local/src/lightgbm/LightGBM:${PATH}
-# COPY requirements.txt .
-# # Instal basic utilities
-# RUN apt-get update \
-#   && apt-get install -y --no-install-recommends python-dev python-pip python3-setuptools virtualenv git wget unzip bzip2 build-essential ca-certificates cmake libboost-dev libboost-system-dev libboost-filesystem-dev gcc g++ \
-#   && apt-get clean \
-#   && rm -rf /var/lib/apt/lists/* \
-#   # Create venv
-#   && virtualenv -p python3 ./venv \
-#   && . ./venv/bin/activate \
-#   && pip install -U pip \
-#   && pip install -U tensorflow==2.2.0 \
-#   # Install python packages
-#   && pip install -r requirements.txt \
-#   && pip install torch torchvision \
-#   # LightGBM (ref.) https://github.com/microsoft/LightGBM/blob/master/docker/gpu/dockerfile.gpu
-#   # Add OpenCL ICD files for LightGBM
-#   && mkdir -p /etc/OpenCL/vendors \
-#   && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd \
-#   && cd /usr/local/src && mkdir lightgbm && cd lightgbm \
-#   && git clone --recursive --branch stable --depth 1 https://github.com/microsoft/LightGBM \
-#   && cd LightGBM && mkdir build && cd build \
-#   && cmake -DUSE_GPU=1 -DOpenCL_LIBRARY=/usr/local/cuda/lib64/libOpenCL.so -DOpenCL_INCLUDE_DIR=/usr/local/cuda/include/ .. \
-#   && make OPENCL_HEADERS=/usr/local/cuda-$CUDA_VERSION/targets/x86_64-linux/include LIBOPENCL=/usr/local/cuda-$CUDA_VERSION/targets/x86_64-linux/lib \
-#   && /bin/bash -c "cd /usr/local/src/lightgbm/LightGBM/python-package && python setup.py install --precompile"
-
-# FROM nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04 as runner
-# RUN apt-get update \
-#   && apt-get install -y --no-install-recommends python-dev python-pip python3-setuptools virtualenv git unzip vim wget \
-#   && apt-get clean \
-#   && rm -rf /var/lib/apt/lists/* \
-#   && virtualenv -p python3 ./venv \
-#   && . ./venv/bin/activate \
-#   && mkdir /root/.kaggle
-# COPY --from=builder /usr/local/lib/python3.6/dist-packages /usr/local/lib/python3.6/dist-packages
-# COPY --from=builder /venv /venv
-# COPY --from=builder /usr/lib/x86_64-linux-gnu/libboost_system.so.1.65.1 /usr/local/cuda/lib64/libboost_system.so.1.65.1
-# COPY --from=builder /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.65.1 /usr/local/cuda/lib64/libboost_filesystem.so.1.65.1
-# # COPY --from=builder /usr/lib/x86_64-linux-gnu/libnvidia-opencl.so.1 /usr/lib/x86_64-linux-gnu/libnvidia-opencl.so.1
-# COPY --from=builder /usr/local/cuda/lib64/libOpenCL.so.1 /usr/local/cuda/lib64/libOpenCL.so.1
-# COPY --from=builder /usr/local/cuda/targets/x86_64-linux/include /usr/local/cuda/targets/x86_64-linux/include
-# COPY --from=builder /usr/local/cuda/targets/x86_64-linux/lib /usr/local/cuda/targets/x86_64-linux/lib
-
-
