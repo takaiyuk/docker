@@ -9,6 +9,7 @@ ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/usr/local/lib
 ENV OPENCL_LIBRARIES /usr/local/cuda/lib64
 ENV OPENCL_INCLUDE_DIR /usr/local/cuda/include
 ENV PATH /usr/local/src/lightgbm/LightGBM:${PATH}
+ENV TF_VERSION=2.2.0
 COPY requirements.txt .
 # Instal basic utilities
 RUN apt-get update \
@@ -19,7 +20,7 @@ RUN apt-get update \
   && virtualenv -p python3 ./venv \
   && . ./venv/bin/activate \
   && pip install -U pip \
-  && pip install -U tensorflow==2.2.0 \
+  && pip install -U tensorflow==$TF_VERSION \
   # Install python packages
   && pip install -r requirements.txt \
   && pip install torch torchvision \
@@ -49,7 +50,7 @@ ENV OPENCL_LIBRARIES /usr/local/cuda/lib64
 ENV OPENCL_INCLUDE_DIR /usr/local/cuda/include
 ENV PATH /usr/local/src/lightgbm/LightGBM:${PATH}
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends python-dev python-pip python3-setuptools virtualenv git unzip vim wget \
+  && apt-get install -y --no-install-recommends python-dev python-pip python3-setuptools virtualenv git unzip vim wget zip \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
   && virtualenv -p python3 ./venv \
