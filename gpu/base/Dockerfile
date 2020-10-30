@@ -10,6 +10,7 @@ ENV OPENCL_LIBRARIES /usr/local/cuda/lib64
 ENV OPENCL_INCLUDE_DIR /usr/local/cuda/include
 ENV PATH /usr/local/src/lightgbm/LightGBM:${PATH}
 ENV TF_VERSION=2.2.0
+ENV TORCH_VERSION=1.6.0
 COPY requirements.txt .
 # Instal basic utilities
 RUN apt-get update \
@@ -23,8 +24,9 @@ RUN apt-get update \
   && pip install -U tensorflow==$TF_VERSION \
   # Install python packages
   && pip install -r requirements.txt \
-  && pip install torch torchvision \
-  && pip install torch-geometric torch-sparse \
+  && pip install torch==$TORCH_VERSION torchvision \
+  && pip install torch-scatter==latest+cu102 torch-sparse==latest+cu102 -f https://pytorch-geometric.com/whl/torch-$TORCH_VERSION.html \
+  && pip install torch-geometric \
   # Install cocoapi
   && pip install Cython \
   && mkdir coco && cd coco && git clone https://github.com/cocodataset/cocoapi && cd cocoapi/PythonAPI && make install && cd ../.. && rm -r cocoapi \
