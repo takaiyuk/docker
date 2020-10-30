@@ -24,6 +24,7 @@ RUN apt-get update \
   # Install python packages
   && pip install -r requirements.txt \
   && pip install torch torchvision \
+  && pip install torch-geometric torch-sparse \
   # Install cocoapi
   && pip install Cython \
   && mkdir coco && cd coco && git clone https://github.com/cocodataset/cocoapi && cd cocoapi/PythonAPI && make install && cd ../.. && rm -r cocoapi \
