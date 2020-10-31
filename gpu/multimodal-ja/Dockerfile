@@ -1,17 +1,12 @@
-# ./build.sh
-# ./run.sh ${CONTAINER_NAME}
-# ./exec.sh ${CONTAINER_NAME}
-# . /venv/bin/activate && jupyter notebook list
 FROM takaiyuk/ml-base-gpu:latest
 ENV APP_HOME /workspace
 ENV TZ Asia/Tokyo
-# ENV DEBIAN_FRONTEND noninteractive
 WORKDIR $APP_HOME
 COPY requirements.txt .
 RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime \
   && . /venv/bin/activate \
   && apt-get update -y \
-  && apt-get install -y --no-install-recommends clang cmake curl file gcc g++ libopencv-dev sudo unzip wget xz-utils zip python3-dev \
+  && apt-get install -y --no-install-recommends clang cmake curl file gcc g++ libopencv-dev sudo wget xz-utils python-dev python-pip python3-setuptools \
   # MeCab
   && apt-get install -y --no-install-recommends mecab libmecab-dev mecab-ipadic mecab-ipadic-utf8 \
   # mecab-ipadic-NEologd

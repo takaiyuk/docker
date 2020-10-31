@@ -1,4 +1,6 @@
+albumentations==0.4.5
 gensim==3.8.1
+janome==0.4.1
 mecab-python3==0.996.5
 neologdn==0.4.0
 nltk==3.5.0
