@@ -39,7 +39,8 @@ CMD . /venv/bin/activate \
   --allow-root
 
 # TEST
-# import lightgbm as lgb; X = [[0,1,2],[3,4,5]]; y = [0,1]; m = lgb.LGBMClassifier(device='gpu', gpu_platform_id=0, gpu_device_id=0); m.fit(X,y)
-# import tensorflow as tf; print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
-
-# . /venv/bin/activate && python -c "import cudf"
+# ./run.sh hoge && ./exec.sh hoge
+# . /venv/bin/activate
+# python -c "import lightgbm as lgb; X = [[0,1,2],[3,4,5]]; y = [0,1]; m = lgb.LGBMClassifier(device='gpu', gpu_platform_id=0, gpu_device_id=0); m.fit(X,y)"
+# python -c "import tensorflow as tf; print('Num GPUs Available:', len(tf.config.experimental.list_physical_devices('GPU')))"
+# python -c "import cudf"

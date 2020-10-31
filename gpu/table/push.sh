@@ -1,2 +1,2 @@
 #!/bin/bash
-sudo docker push takaiyuk/ml-table-cudf-gpu:latest
+sudo docker push takaiyuk/ml-table-gpu:latest
