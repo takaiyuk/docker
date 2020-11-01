@@ -14,16 +14,15 @@ ENV TORCH_VERSION=1.6.0
 COPY requirements.txt .
 # Instal basic utilities
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends python3-dev libssl-dev libffi-dev python3-pip python3-setuptools virtualenv git wget unzip bzip2 build-essential ca-certificates cmake libboost-dev libboost-system-dev libboost-filesystem-dev gcc g++ \
+  && apt-get install -y --no-install-recommends build-essential bzip2 ca-certificates cmake git libboost-filesystem-dev libboost-dev libboost-system-dev libffi-dev libssl-dev python3-dev python3-pip python3-setuptools virtualenv wget unzip \
+  && apt-get autoremove -y \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
-  # Create venv
-  && virtualenv -p python3 ./venv \
-  && . ./venv/bin/activate \
+  && virtualenv -p python3 ./venv
+RUN . ./venv/bin/activate \
   && pip install -U pip \
+  # Install pytorch
   && pip install -U tensorflow==$TF_VERSION \
-  # Install python packages
-  && pip install -r requirements.txt \
   && pip install torch==$TORCH_VERSION torchvision \
   && pip install torch-scatter==latest+cu102 torch-sparse==latest+cu102 -f https://pytorch-geometric.com/whl/torch-$TORCH_VERSION.html \
   && pip install torch-geometric \
@@ -41,6 +40,8 @@ RUN apt-get update \
   && cmake -DUSE_GPU=1 -DOpenCL_LIBRARY=/usr/local/cuda/lib64/libOpenCL.so -DOpenCL_INCLUDE_DIR=/usr/local/cuda/include/ .. \
   && make OPENCL_HEADERS=/usr/local/cuda-$CUDA_VERSION/targets/x86_64-linux/include LIBOPENCL=/usr/local/cuda-$CUDA_VERSION/targets/x86_64-linux/lib \
   && /bin/bash -c "cd /usr/local/src/lightgbm/LightGBM/python-package && python setup.py install --precompile"
+RUN . ./venv/bin/activate \
+  && pip install -r requirements.txt
 
 FROM nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04 as runner
 ARG PYTHON_VERSION=3.6.9
@@ -54,6 +55,7 @@ ENV OPENCL_INCLUDE_DIR /usr/local/cuda/include
 ENV PATH /usr/local/src/lightgbm/LightGBM:${PATH}
 RUN apt-get update \
   && apt-get install -y --no-install-recommends virtualenv git unzip vim wget zip \
+  && apt-get autoremove -y \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
   && virtualenv -p python3 ./venv \
