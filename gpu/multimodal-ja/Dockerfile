@@ -9,7 +9,7 @@ COPY requirements.txt .
 RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime \
   && . /venv/bin/activate \
   && apt-get update -y \
-  && apt-get install -y --no-install-recommends build-essential cmake curl file python3-dev sudo language-pack-ja-base language-pack-ja\
+  && apt-get install -y --no-install-recommends build-essential cmake curl file python3-dev sudo language-pack-ja-base language-pack-ja \
   # MeCab
   && apt-get install -y --no-install-recommends mecab libmecab-dev mecab-ipadic mecab-ipadic-utf8 \
   # mecab-ipadic-NEologd
@@ -18,13 +18,9 @@ RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime \
   && sed -i -e "s|^dicdir.*$|dicdir = /usr/lib/mecab/dic/mecab-ipadic-neologd|" /etc/mecabrc \
   && rm -rf /tmp/neologd \
   # fastText
-  && git clone https://github.com/facebookresearch/fastText.git \
-  && cd fastText \
-  && python setup.py install \
-  && cd .. \
-  && rm -rf fastText
-# requirements.txt
+  && git clone https://github.com/facebookresearch/fastText.git && cd fastText && python setup.py install && cd .. && rm -rf fastText
 RUN . /venv/bin/activate \
+  # requirements.txt
   # for avoid UnicodeDecodeError when installing sudachiDict
   && locale-gen en_US.UTF-8 \
   && cd $APP_HOME \
