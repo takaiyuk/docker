@@ -2,7 +2,7 @@ catboost>=0.24.2
 category-encoders>=2.2.2
 dataclasses==0.7.0
 fsspec==0.6.3
-h5py>=3.0.0
+h5py<3.0.0
 hydra-core>=1.0.3
 ipywidgets==7.5.1
 japanize-matplotlib==1.1.3
