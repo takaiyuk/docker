@@ -25,7 +25,7 @@ RUN apt-get update -y \
 RUN . /venv/bin/activate \
   && locale-gen en_US.UTF-8 \
   && pip install -U pip wheel \
-  && pip wheel -w /tmp/wheelhouse -r requirements.txt\
+  && pip wheel -w /tmp/wheelhouse -r requirements.txt \
   && pip install --no-index /tmp/wheelhouse/*.whl
 RUN . /venv/bin/activate \
   # Install pytorch
@@ -47,7 +47,9 @@ RUN . /venv/bin/activate \
   && pip install --no-index /tmp/wheelhouse/Cython-*.whl \
   && git clone https://github.com/cocodataset/cocoapi && cd cocoapi/PythonAPI && python setup.py build_ext bdist_wheel -d /tmp/wheelhouse && cd ../.. && rm -r cocoapi \
   # Install xfeat
-  && git clone https://github.com/pfnet-research/xfeat.git && cd xfeat && python setup.py bdist_wheel -d /tmp/wheelhouse && cd .. && rm -r xfeat
+  && git clone https://github.com/pfnet-research/xfeat.git && cd xfeat && python setup.py bdist_wheel -d /tmp/wheelhouse && cd .. && rm -r xfeat \
+  # require h5py<3.0.0 but keras install latest h5py, so remove it
+  && rm /tmp/wheelhouse/h5py-3*.whl
 
 FROM rapidsai/rapidsai:0.14-cuda10.1-base-ubuntu18.04-py3.6 as rapidsai
 
