@@ -10,6 +10,8 @@ RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime \
   && . /venv/bin/activate \
   && apt-get update -y \
   && apt-get install -y --no-install-recommends build-essential cmake curl file python3-dev sudo language-pack-ja-base language-pack-ja \
+  # for Opencv
+  && apt-get install -y --no-install-recommends libopencv-dev \
   # MeCab
   && apt-get install -y --no-install-recommends mecab libmecab-dev mecab-ipadic mecab-ipadic-utf8 \
   # mecab-ipadic-NEologd

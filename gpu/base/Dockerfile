@@ -88,7 +88,7 @@ COPY --from=rapidsai /conda/envs/rapids/lib/python3.6/site-packages/cupy /venv/l
 COPY --from=rapidsai /conda/envs/rapids/lib/python3.6/site-packages/cupyx /venv/lib/python3.6/site-packages/cupyx
 COPY --from=rapidsai /conda/envs/rapids/lib/python3.6/site-packages/fastrlock /venv/lib/python3.6/site-packages/fastrlock
 COPY --from=rapidsai /conda/envs/rapids/lib/python3.6/site-packages/rmm /venv/lib/python3.6/site-packages/rmm
-# # copy for cudf-lib
+# copy for cudf-lib
 COPY --from=rapidsai /conda/envs/rapids/lib/libarrow.so.15 /usr/local/cuda-10.1/lib64/libarrow.so.15
 COPY --from=rapidsai /conda/envs/rapids/lib/libarrow_flight.so.15 /usr/local/cuda-10.1/lib64/libarrow_flight.so.15
 COPY --from=rapidsai /conda/envs/rapids/lib/libarrow_python.so.15 /usr/local/cuda-10.1/lib64/libarrow_python.so.15
