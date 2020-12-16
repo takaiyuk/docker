@@ -9,14 +9,16 @@ ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/usr/local/lib
 ENV OPENCL_LIBRARIES /usr/local/cuda/lib64
 ENV OPENCL_INCLUDE_DIR /usr/local/cuda/include
 ENV PATH /usr/local/src/lightgbm/LightGBM:${PATH}
-ENV TORCH_VERSION=1.6.0
+ENV LIGHTGBM_VERSION v3.0.0
+ENV TORCH_GEOMETRIC_VERSION 1.6.0
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
-COPY requirements.txt .
+ENV POETRY_VERSION 1.1.4
+COPY . .
 # Instal basic utilities
 RUN apt-get update -y \
-  && apt-get install -y --no-install-recommends build-essential bzip2 ca-certificates cmake g++ gcc git libboost-filesystem-dev libboost-dev libboost-system-dev libffi-dev libssl-dev python3-dev python3-pip python3-setuptools virtualenv wget unzip \
+  && apt-get install -y --no-install-recommends build-essential bzip2 ca-certificates cmake curl g++ gcc git libboost-filesystem-dev libboost-dev libboost-system-dev libffi-dev libssl-dev python3-dev python3-pip python3-setuptools virtualenv wget unzip \
   && apt-get install -y --no-install-recommends language-pack-ja-base language-pack-ja \
   && apt-get autoremove -y \
   && apt-get clean \
@@ -24,33 +26,24 @@ RUN apt-get update -y \
   && virtualenv -p python3 ./venv
 RUN . /venv/bin/activate \
   && locale-gen en_US.UTF-8 \
-  && pip install -U pip wheel \
-  && pip wheel -w /tmp/wheelhouse -r requirements.txt \
-  && pip install --no-index /tmp/wheelhouse/*.whl
-RUN . /venv/bin/activate \
-  # Install pytorch
-  && pip wheel -w /tmp/wheelhouse torch-scatter==latest+cu101 torch-sparse==latest+cu101 -f https://pytorch-geometric.com/whl/torch-$TORCH_VERSION.html \
-  && pip wheel -w /tmp/wheelhouse torch-geometric
+  && pip install -U pip poetry==$POETRY_VERSION wheel \
+  && poetry config virtualenvs.create false \
+  && poetry install --no-interaction --no-ansi
 RUN . /venv/bin/activate \
   # Install LightGBM (ref. https://github.com/microsoft/LightGBM/blob/master/docker/gpu/dockerfile.gpu)
   # Add OpenCL ICD files for LightGBM
   && mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd \
   && cd /usr/local/src && mkdir lightgbm && cd lightgbm \
-  && git clone --recursive --branch stable --depth 1 https://github.com/microsoft/LightGBM \
+  && git clone --recursive --branch stable --depth 1 https://github.com/microsoft/LightGBM -b $LIGHTGBM_VERSION \
   && cd LightGBM && mkdir build && cd build \
   && cmake -DUSE_GPU=1 -DOpenCL_LIBRARY=$OPENCL_LIBRARIES/libOpenCL.so -DOpenCL_INCLUDE_DIR=$OPENCL_INCLUDE_DIR/ .. \
   && make OPENCL_HEADERS=/usr/local/cuda-$CUDA_VERSION/targets/x86_64-linux/include LIBOPENCL=/usr/local/cuda-$CUDA_VERSION/targets/x86_64-linux/lib \
   && /bin/bash -c "cd /usr/local/src/lightgbm/LightGBM/python-package && python setup.py bdist_wheel -d /tmp/wheelhouse"
 RUN . /venv/bin/activate \
   # Install cocoapi
-  && pip wheel -w /tmp/wheelhouse Cython \
-  && pip install --no-index /tmp/wheelhouse/Cython-*.whl \
   && git clone https://github.com/cocodataset/cocoapi && cd cocoapi/PythonAPI && python setup.py build_ext bdist_wheel -d /tmp/wheelhouse && cd ../.. && rm -r cocoapi \
   # Install xfeat
   && git clone https://github.com/pfnet-research/xfeat.git && cd xfeat && python setup.py bdist_wheel -d /tmp/wheelhouse && cd .. && rm -r xfeat
-RUN . /venv/bin/activate \
-  # Solve double requirement(e.g. require h5py<3.0.0 but keras install latest h5py, so remove it)
-  && rm /tmp/wheelhouse/h5py-3*.whl /tmp/wheelhouse/urllib3-1.26.0*.whl
 
 FROM rapidsai/rapidsai:0.14-cuda10.1-base-ubuntu18.04-py3.6 as rapidsai
 
@@ -64,6 +57,7 @@ ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/usr/local/lib
 ENV OPENCL_LIBRARIES ${CUDA_HOME}/lib64
 ENV OPENCL_INCLUDE_DIR ${CUDA_HOME}/include
 ENV PATH /usr/local/src/lightgbm/LightGBM:${PATH}
+COPY --from=builder /venv/lib/python3.6/site-packages /venv/lib/python3.6/site-packages
 COPY --from=builder /tmp/wheelhouse /tmp/wheelhouse
 RUN apt-get update -y \
   && apt-get install -y --no-install-recommends git unzip vim virtualenv wget zip \
@@ -74,7 +68,7 @@ RUN apt-get update -y \
 RUN . /venv/bin/activate \
   && pip install -U pip wheel \
   && pip install --no-index /tmp/wheelhouse/*.whl \
-  && rm -r /tmp/wheelhouse \
+  && rm -r /tmp \
   && mkdir /root/.kaggle
 # copy for LightGBM
 COPY --from=builder /etc/OpenCL/vendors/nvidia.icd /etc/OpenCL/vendors/nvidia.icd
