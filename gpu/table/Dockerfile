@@ -12,10 +12,7 @@ RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime \
   # && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 # set alias
-RUN echo "" >> ~/.bashrc && echo "alias jnl='jupyter notebook list'" >> ~/.bashrc && echo "alias venv-activate='. /venv/bin/activate'" >> ~/.bashrc
-CMD . /venv/bin/activate \
-  && jupyter lab \
-  --no-browser \
-  --port=8888 \
-  --ip=0.0.0.0 \
-  --allow-root
+RUN echo "" >> ~/.bashrc \
+  && echo "alias jnl='jupyter notebook list'" >> ~/.bashrc \
+  && echo "alias venv-activate='. /venv/bin/activate'" >> ~/.bashrc \
+  && echo "alias jl='jupyter lab --no-browser --allow-root --ip=0.0.0.0 --port='" >> ~/.bashrc
