@@ -14,12 +14,12 @@ ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 # basic utilities
 RUN apt-get update -y \
-  && apt-get install -y --no-install-recommends build-essential bzip2 ca-certificates cmake curl g++ gcc git libboost-filesystem-dev libboost-dev libboost-system-dev libffi-dev libssl-dev python3.7 python3.7-dev python3-pip python3-setuptools virtualenv wget unzip \
+  && apt-get install -y --no-install-recommends build-essential bzip2 ca-certificates cmake curl g++ gcc git libboost-filesystem-dev libboost-dev libboost-system-dev libffi-dev libssl-dev python$PYTHON_VERSION python$PYTHON_VERSION-dev python3-pip python3-setuptools virtualenv wget unzip \
   && apt-get install -y --no-install-recommends language-pack-ja-base language-pack-ja \
   && apt-get autoremove -y \
   && apt-get clean -y \
   && rm -rf /var/lib/apt/lists/*
-RUN virtualenv -p python3.7 ./venv
+RUN virtualenv -p python$PYTHON_VERSION ./venv
 # install
 COPY requirements.txt .
 RUN locale-gen en_US.UTF-8 \
@@ -53,14 +53,14 @@ ENV OPENCL_LIBRARIES ${CUDA_HOME}/lib64
 ENV OPENCL_INCLUDE_DIR ${CUDA_HOME}/include
 ENV PATH /usr/local/src/lightgbm/LightGBM:${PATH}
 RUN apt-get update -y \
-  && apt-get install -y --no-install-recommends git python3.7 unzip vim virtualenv wget zip \
+  && apt-get install -y --no-install-recommends git python$PYTHON_VERSION unzip vim virtualenv wget zip \
   && apt-get autoremove -y \
   && apt-get clean -y \
   && rm -rf /var/lib/apt/lists/* \
   && mkdir /root/.kaggle
-RUN virtualenv -p python3.7 ./venv
+RUN virtualenv -p python$PYTHON_VERSION ./venv
 # basic-packages
-COPY --from=builder /venv/lib/python3.7/site-packages /venv/lib/python3.7/site-packages
+COPY --from=builder /venv/lib/python$PYTHON_VERSION/site-packages /venv/lib/python$PYTHON_VERSION/site-packages
 COPY --from=builder /venv/bin /venv/bin
 COPY --from=builder /venv/share/ /venv/share/
 # lightgbm-libs
@@ -70,16 +70,16 @@ COPY --from=builder /usr/lib/x86_64-linux-gnu/libboost_system.so.1.65.1 $OPENCL_
 COPY --from=builder /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.65.1 $OPENCL_LIBRARIES/libboost_filesystem.so.1.65.1
 COPY --from=builder $CUDA_HOME-$CUDA_VERSION/lib64/libOpenCL.so.1 $CUDA_HOME-$CUDA_VERSION/lib64/libOpenCL.so.1
 # cupy-packages
-COPY --from=rapidsai /conda/envs/rapids/lib/python3.7/site-packages/cudf /venv/lib/python3.7/site-packages/cudf
-COPY --from=rapidsai /conda/envs/rapids/lib/python3.7/site-packages/cupy /venv/lib/python3.7/site-packages/cupy
-COPY --from=rapidsai /conda/envs/rapids/lib/python3.7/site-packages/cupy_backends /venv/lib/python3.7/site-packages/cupy_backends
-COPY --from=rapidsai /conda/envs/rapids/lib/python3.7/site-packages/cupyx /venv/lib/python3.7/site-packages/cupyx
-COPY --from=rapidsai /conda/envs/rapids/lib/python3.7/site-packages/fastrlock /venv/lib/python3.7/site-packages/fastrlock
-COPY --from=rapidsai /conda/envs/rapids/lib/python3.7/site-packages/nvtx /venv/lib/python3.7/site-packages/nvtx
-COPY --from=rapidsai /conda/envs/rapids/lib/python3.7/site-packages/pyarrow /venv/lib/python3.7/site-packages/pyarrow
-COPY --from=rapidsai /conda/envs/rapids/lib/python3.7/site-packages/rmm /venv/lib/python3.7/site-packages/rmm
-COPY --from=rapidsai /conda/envs/rapids/lib/python3.7/site-packages/cuml /venv/lib/python3.7/site-packages/cuml
-COPY --from=rapidsai /conda/envs/rapids/lib/python3.7/site-packages/treelite /venv/lib/python3.7/site-packages/treelite
+COPY --from=rapidsai /conda/envs/rapids/lib/python$PYTHON_VERSION/site-packages/cudf /venv/lib/python$PYTHON_VERSION/site-packages/cudf
+COPY --from=rapidsai /conda/envs/rapids/lib/python$PYTHON_VERSION/site-packages/cupy /venv/lib/python$PYTHON_VERSION/site-packages/cupy
+COPY --from=rapidsai /conda/envs/rapids/lib/python$PYTHON_VERSION/site-packages/cupy_backends /venv/lib/python$PYTHON_VERSION/site-packages/cupy_backends
+COPY --from=rapidsai /conda/envs/rapids/lib/python$PYTHON_VERSION/site-packages/cupyx /venv/lib/python$PYTHON_VERSION/site-packages/cupyx
+COPY --from=rapidsai /conda/envs/rapids/lib/python$PYTHON_VERSION/site-packages/fastrlock /venv/lib/python$PYTHON_VERSION/site-packages/fastrlock
+COPY --from=rapidsai /conda/envs/rapids/lib/python$PYTHON_VERSION/site-packages/nvtx /venv/lib/python$PYTHON_VERSION/site-packages/nvtx
+COPY --from=rapidsai /conda/envs/rapids/lib/python$PYTHON_VERSION/site-packages/pyarrow /venv/lib/python$PYTHON_VERSION/site-packages/pyarrow
+COPY --from=rapidsai /conda/envs/rapids/lib/python$PYTHON_VERSION/site-packages/rmm /venv/lib/python$PYTHON_VERSION/site-packages/rmm
+COPY --from=rapidsai /conda/envs/rapids/lib/python$PYTHON_VERSION/site-packages/cuml /venv/lib/python$PYTHON_VERSION/site-packages/cuml
+COPY --from=rapidsai /conda/envs/rapids/lib/python$PYTHON_VERSION/site-packages/treelite /venv/lib/python$PYTHON_VERSION/site-packages/treelite
 # cupy-libs
 COPY --from=rapidsai /conda/envs/rapids/lib/libarrow.so.100 $CUDA_HOME-$CUDA_VERSION/lib64/libarrow.so.100
 COPY --from=rapidsai /conda/envs/rapids/lib/libarrow_cuda.so.100 $CUDA_HOME-$CUDA_VERSION/lib64/libarrow_cuda.so.100
