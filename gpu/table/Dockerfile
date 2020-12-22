@@ -2,7 +2,7 @@ FROM takaiyuk/ml-base-gpu:latest
 ENV APP_HOME /workspace
 ENV TZ Asia/Tokyo
 WORKDIR $APP_HOME
-COPY requirements.txt $APP_HOME
+# COPY requirements.txt $APP_HOME
 RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime \
   # && apt-get update -y \
   # && apt-get install -y --no-install-recommends HOGE \
