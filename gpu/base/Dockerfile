@@ -1,6 +1,5 @@
 FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu18.04 as builder
-ENV PYTHON_VERSION=3.7.9
-ENV PYENV_ROOT /root/.pyenv
+ENV PYTHON_VERSION=3.7
 ENV CUDA_VERSION=10.2
 ENV CUDA_HOME /usr/local/cuda
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${CUDA_HOME}/lib64
@@ -15,40 +14,36 @@ ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 # basic utilities
 RUN apt-get update -y \
-  && apt-get install -y --no-install-recommends build-essential bzip2 ca-certificates cmake curl g++ gcc git libboost-filesystem-dev libboost-dev libboost-system-dev libffi-dev libssl-dev python3-dev python3-pip python3-setuptools tar virtualenv wget unzip zlib1g-dev \
+  && apt-get install -y --no-install-recommends build-essential bzip2 ca-certificates cmake curl g++ gcc git libboost-filesystem-dev libboost-dev libboost-system-dev libffi-dev libssl-dev python$PYTHON_VERSION python$PYTHON_VERSION-dev python3-pip python3-setuptools virtualenv wget unzip \
   && apt-get install -y --no-install-recommends language-pack-ja-base language-pack-ja \
   && apt-get autoremove -y \
-  && apt-get clean \
+  && apt-get clean -y \
   && rm -rf /var/lib/apt/lists/*
-# pyenv
-RUN git clone https://github.com/pyenv/pyenv.git $PYENV_ROOT
-ENV PATH $PYENV_ROOT/bin:$PATH
-ENV PATH $PYENV_ROOT/shims:$PATH
-RUN pyenv install -v $PYTHON_VERSION \
-  && pyenv global $PYTHON_VERSION
+RUN virtualenv -p python$PYTHON_VERSION ./venv
 # install
 COPY requirements.txt .
 RUN locale-gen en_US.UTF-8 \
-  && python -m pip install -U pip \
+  && . /venv/bin/activate \
   && pip install -U pip wheel \
   && pip install -r requirements.txt
 # lightgbm
-RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd \
+RUN . /venv/bin/activate \
+  && mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd \
   && cd /usr/local/src && mkdir lightgbm && cd lightgbm \
   && git clone --recursive --branch stable --depth 1 https://github.com/microsoft/LightGBM -b $LIGHTGBM_VERSION \
   && cd LightGBM && mkdir build && cd build \
   && cmake -DUSE_GPU=1 -DOpenCL_LIBRARY=$OPENCL_LIBRARIES/libOpenCL.so -DOpenCL_INCLUDE_DIR=$OPENCL_INCLUDE_DIR/ .. \
   && make OPENCL_HEADERS=/usr/local/cuda-$CUDA_VERSION/targets/x86_64-linux/include LIBOPENCL=/usr/local/cuda-$CUDA_VERSION/targets/x86_64-linux/lib \
-  && /bin/bash -c "cd /usr/local/src/lightgbm/LightGBM/python-package && python setup.py bdist_wheel -d /tmp/wheelhouse"
+  && /bin/bash -c "cd /usr/local/src/lightgbm/LightGBM/python-package && python setup.py install"
 # build from source
-RUN git clone https://github.com/cocodataset/cocoapi && cd cocoapi/PythonAPI && python setup.py build_ext bdist_wheel -d /tmp/wheelhouse && cd ../.. && rm -r cocoapi \
-  && git clone https://github.com/pfnet-research/xfeat.git && cd xfeat && python setup.py bdist_wheel -d /tmp/wheelhouse && cd .. && rm -r xfeat
+RUN . /venv/bin/activate \
+  && git clone https://github.com/cocodataset/cocoapi && cd cocoapi/PythonAPI && python setup.py install && cd ../.. && rm -r cocoapi \
+  && git clone https://github.com/pfnet-research/xfeat.git && cd xfeat && python setup.py install && cd .. && rm -r xfeat
 
 FROM rapidsai/rapidsai:cuda10.2-base-ubuntu18.04-py3.7 as rapidsai
 
 FROM nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04 as runner
-ENV PYTHON_VERSION=3.7.9
-ENV PYENV_ROOT /root/.pyenv
+ENV PYTHON_VERSION=3.7
 ENV CUDA_VERSION=10.2
 ENV CUDA_HOME /usr/local/cuda
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${CUDA_HOME}/lib64
@@ -58,43 +53,34 @@ ENV OPENCL_LIBRARIES ${CUDA_HOME}/lib64
 ENV OPENCL_INCLUDE_DIR ${CUDA_HOME}/include
 ENV PATH /usr/local/src/lightgbm/LightGBM:${PATH}
 RUN apt-get update -y \
-  && apt-get install -y --no-install-recommends build-essential bzip2 git libbz2-dev libffi-dev libssl-dev python3-dev python3-pip unzip vim virtualenv wget zip zlib1g-dev \
+  && apt-get install -y --no-install-recommends git python$PYTHON_VERSION unzip vim virtualenv wget zip \
   && apt-get autoremove -y \
   && apt-get clean -y \
-  && rm -rf /var/lib/apt/lists/*
-# pyenv
-RUN git clone https://github.com/pyenv/pyenv.git $PYENV_ROOT
-ENV PATH $PYENV_ROOT/bin:$PATH
-ENV PATH $PYENV_ROOT/shims:$PATH
-RUN pyenv install -v $PYTHON_VERSION \
-  && pyenv global $PYTHON_VERSION
-# install
-COPY --from=builder $PYENV_ROOT/versions/$PYTHON_VERSION/lib/python3.7/site-packages $PYENV_ROOT/versions/$PYTHON_VERSION/lib/python3.7/site-packages
-# lightgbm, cocoapi, xfeat
-COPY --from=builder /tmp/wheelhouse /tmp/wheelhouse
-RUN python -m pip install -U pip \
-  && pip install -U pip wheel \
-  && pip install --no-index /tmp/wheelhouse/*.whl \
-  && rm -r /tmp \
+  && rm -rf /var/lib/apt/lists/* \
   && mkdir /root/.kaggle
-# lightgbm-lib
+RUN virtualenv -p python$PYTHON_VERSION ./venv
+# basic-packages
+COPY --from=builder /venv/lib/python$PYTHON_VERSION/site-packages /venv/lib/python$PYTHON_VERSION/site-packages
+COPY --from=builder /venv/bin /venv/bin
+COPY --from=builder /venv/share/ /venv/share/
+# lightgbm-libs
 COPY --from=builder /etc/OpenCL/vendors/nvidia.icd /etc/OpenCL/vendors/nvidia.icd
 COPY --from=builder /usr/lib/x86_64-linux-gnu/libgomp.so.1 $OPENCL_LIBRARIES/libgomp.so.1
 COPY --from=builder /usr/lib/x86_64-linux-gnu/libboost_system.so.1.65.1 $OPENCL_LIBRARIES/libboost_system.so.1.65.1
 COPY --from=builder /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.65.1 $OPENCL_LIBRARIES/libboost_filesystem.so.1.65.1
 COPY --from=builder $CUDA_HOME-$CUDA_VERSION/lib64/libOpenCL.so.1 $CUDA_HOME-$CUDA_VERSION/lib64/libOpenCL.so.1
-# cupy-package
-COPY --from=rapidsai /conda/envs/rapids/lib/python3.7/site-packages/cudf $PYENV_ROOT/versions/$PYTHON_VERSION/lib/python3.7/site-packages/cudf
-COPY --from=rapidsai /conda/envs/rapids/lib/python3.7/site-packages/cupy $PYENV_ROOT/versions/$PYTHON_VERSION/lib/python3.7/site-packages/cupy
-COPY --from=rapidsai /conda/envs/rapids/lib/python3.7/site-packages/cupy_backends $PYENV_ROOT/versions/$PYTHON_VERSION/lib/python3.7/site-packages/cupy_backends
-COPY --from=rapidsai /conda/envs/rapids/lib/python3.7/site-packages/cupyx $PYENV_ROOT/versions/$PYTHON_VERSION/lib/python3.7/site-packages/cupyx
-COPY --from=rapidsai /conda/envs/rapids/lib/python3.7/site-packages/fastrlock $PYENV_ROOT/versions/$PYTHON_VERSION/lib/python3.7/site-packages/fastrlock
-COPY --from=rapidsai /conda/envs/rapids/lib/python3.7/site-packages/nvtx $PYENV_ROOT/versions/$PYTHON_VERSION/lib/python3.7/site-packages/nvtx
-COPY --from=rapidsai /conda/envs/rapids/lib/python3.7/site-packages/pyarrow $PYENV_ROOT/versions/$PYTHON_VERSION/lib/python3.7/site-packages/pyarrow
-COPY --from=rapidsai /conda/envs/rapids/lib/python3.7/site-packages/rmm $PYENV_ROOT/versions/$PYTHON_VERSION/lib/python3.7/site-packages/rmm
-COPY --from=rapidsai /conda/envs/rapids/lib/python3.7/site-packages/cuml $PYENV_ROOT/versions/$PYTHON_VERSION/lib/python3.7/site-packages/cuml
-COPY --from=rapidsai /conda/envs/rapids/lib/python3.7/site-packages/treelite $PYENV_ROOT/versions/$PYTHON_VERSION/lib/python3.7/site-packages/treelite
-# cupy-lib
+# cupy-packages
+COPY --from=rapidsai /conda/envs/rapids/lib/python$PYTHON_VERSION/site-packages/cudf /venv/lib/python$PYTHON_VERSION/site-packages/cudf
+COPY --from=rapidsai /conda/envs/rapids/lib/python$PYTHON_VERSION/site-packages/cupy /venv/lib/python$PYTHON_VERSION/site-packages/cupy
+COPY --from=rapidsai /conda/envs/rapids/lib/python$PYTHON_VERSION/site-packages/cupy_backends /venv/lib/python$PYTHON_VERSION/site-packages/cupy_backends
+COPY --from=rapidsai /conda/envs/rapids/lib/python$PYTHON_VERSION/site-packages/cupyx /venv/lib/python$PYTHON_VERSION/site-packages/cupyx
+COPY --from=rapidsai /conda/envs/rapids/lib/python$PYTHON_VERSION/site-packages/fastrlock /venv/lib/python$PYTHON_VERSION/site-packages/fastrlock
+COPY --from=rapidsai /conda/envs/rapids/lib/python$PYTHON_VERSION/site-packages/nvtx /venv/lib/python$PYTHON_VERSION/site-packages/nvtx
+COPY --from=rapidsai /conda/envs/rapids/lib/python$PYTHON_VERSION/site-packages/pyarrow /venv/lib/python$PYTHON_VERSION/site-packages/pyarrow
+COPY --from=rapidsai /conda/envs/rapids/lib/python$PYTHON_VERSION/site-packages/rmm /venv/lib/python$PYTHON_VERSION/site-packages/rmm
+COPY --from=rapidsai /conda/envs/rapids/lib/python$PYTHON_VERSION/site-packages/cuml /venv/lib/python$PYTHON_VERSION/site-packages/cuml
+COPY --from=rapidsai /conda/envs/rapids/lib/python$PYTHON_VERSION/site-packages/treelite /venv/lib/python$PYTHON_VERSION/site-packages/treelite
+# cupy-libs
 COPY --from=rapidsai /conda/envs/rapids/lib/libarrow.so.100 $CUDA_HOME-$CUDA_VERSION/lib64/libarrow.so.100
 COPY --from=rapidsai /conda/envs/rapids/lib/libarrow_cuda.so.100 $CUDA_HOME-$CUDA_VERSION/lib64/libarrow_cuda.so.100
 COPY --from=rapidsai /conda/envs/rapids/lib/libarrow_flight.so.100 $CUDA_HOME-$CUDA_VERSION/lib64/libarrow_flight.so.100
@@ -147,3 +133,4 @@ COPY --from=rapidsai /conda/envs/rapids/lib/libtreelite.so $CUDA_HOME-$CUDA_VERS
 COPY --from=rapidsai /conda/envs/rapids/lib/libblas.so.3 $CUDA_HOME-$CUDA_VERSION/lib64/libblas.so.3
 COPY --from=rapidsai /conda/envs/rapids/lib/liblapack.so.3 $CUDA_HOME-$CUDA_VERSION/lib64/liblapack.so.3
 COPY --from=rapidsai /conda/envs/rapids/lib/libgfortran.so.4 $CUDA_HOME-$CUDA_VERSION/lib64/libgfortran.so.4
+COPY --from=rapidsai /conda/envs/rapids/lib/libquadmath.so.0 $CUDA_HOME-$CUDA_VERSION/lib64/libquadmath.so.0
