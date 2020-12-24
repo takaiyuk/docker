@@ -1,15 +1,13 @@
 FROM takaiyuk/ml-base-gpu:latest
+ENV PYTHON_VERSION=3.7
 ENV APP_HOME /workspace
 ENV TZ Asia/Tokyo
-ENV LANG en_US.UTF-8  
-ENV LANGUAGE en_US:en  
-ENV LC_ALL en_US.UTF-8
 WORKDIR $APP_HOME
 COPY requirements.txt .
 RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime \
   && . /venv/bin/activate \
   && apt-get update -y \
-  && apt-get install -y --no-install-recommends build-essential cmake curl file python3-dev sudo language-pack-ja-base language-pack-ja \
+  && apt-get install -y --no-install-recommends build-essential cmake curl file python$PYTHON_VERSION-dev sudo language-pack-ja-base language-pack-ja \
   # for Opencv
   && apt-get install -y --no-install-recommends libopencv-dev \
   # MeCab
@@ -22,21 +20,15 @@ RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime \
   # fastText
   && git clone https://github.com/facebookresearch/fastText.git && cd fastText && python setup.py install && cd .. && rm -rf fastText
 RUN . /venv/bin/activate \
-  # requirements.txt
   # for avoid UnicodeDecodeError when installing sudachiDict
   && locale-gen en_US.UTF-8 \
   && cd $APP_HOME \
-  && pip install --upgrade pip \
   && pip install -r requirements.txt \
   # Clean
-  && apt-get -y remove build-essential cmake curl file python3-dev \
+  && apt-get -y remove build-essential cmake curl file python$PYTHON_VERSION-dev \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
-# set alias
-RUN echo "" >> ~/.bashrc && echo "alias jnl='jupyter notebook list'" >> ~/.bashrc && echo "alias venv-activate='. /venv/bin/activate'" >> ~/.bashrc
-CMD . /venv/bin/activate \
-  && jupyter lab \
-  --no-browser \
-  --port=8888 \
-  --ip=0.0.0.0 \
-  --allow-root
+RUN echo "" >> ~/.bashrc \
+  && echo "alias jnl='jupyter notebook list'" >> ~/.bashrc \
+  && echo "alias venv-activate='. /venv/bin/activate'" >> ~/.bashrc \
+  && echo "alias jl='jupyter lab --no-browser --allow-root --ip=0.0.0.0 --port='" >> ~/.bashrc
