@@ -16,6 +16,7 @@ ml_metrics>=0.1.4
 mlflow>=1.11.0
 numba>=0.51.2
 numpy==1.18.5
+nyaggle==0.1.4
 omegaconf>=2.0.3
 optuna>=2.2.0
 pandas>=1.1.5
