@@ -14,6 +14,7 @@ keras==2.3.1
 matplotlib>=3.3.2
 ml_metrics>=0.1.4
 mlflow>=1.11.0
+mypy>=0.790
 numba>=0.51.2
 numpy==1.18.5
 nyaggle==0.1.4
