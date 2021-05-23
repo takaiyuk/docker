@@ -1,13 +1,14 @@
 FROM takaiyuk/ml-base-gpu:latest
-ENV PYTHON_VERSION=3.7
+ENV PYTHON_VERSION=3.8
 ENV APP_HOME /workspace
 ENV TZ Asia/Tokyo
 WORKDIR $APP_HOME
-COPY requirements.txt .
 RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime \
   && . /venv/bin/activate \
   && apt-get update -y \
-  && apt-get install -y --no-install-recommends build-essential cmake curl file python$PYTHON_VERSION-dev sudo language-pack-ja-base language-pack-ja \
+  && apt-get install -y --no-install-recommends build-essential cmake curl file g++ gcc python$PYTHON_VERSION-dev sudo language-pack-ja-base language-pack-ja
+RUN . /venv/bin/activate \
+  && pip install -U pip \
   # for Opencv
   && apt-get install -y --no-install-recommends libopencv-dev \
   # MeCab
@@ -18,13 +19,22 @@ RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime \
   && sed -i -e "s|^dicdir.*$|dicdir = /usr/lib/mecab/dic/mecab-ipadic-neologd|" /etc/mecabrc \
   && rm -rf /tmp/neologd \
   # fastText
-  && git clone https://github.com/facebookresearch/fastText.git && cd fastText && python setup.py install && cd .. && rm -rf fastText
+  && git clone https://github.com/facebookresearch/fastText.git && cd fastText && pip install . && cd .. && rm -rf fastText
+ENV POETRY_VERSION 1.1.6
+RUN . /venv/bin/activate \
+  && curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/$POETRY_VERSION/get-poetry.py | python
+ENV PATH /root/.poetry/bin:$PATH
+COPY poetry.lock pyproject.toml ./
+COPY multimodal_ja/ ./multimodal_ja/
 RUN . /venv/bin/activate \
   # for avoid UnicodeDecodeError when installing sudachiDict
   && locale-gen en_US.UTF-8 \
-  && cd $APP_HOME \
-  && pip install -r requirements.txt \
+  && poetry install --no-interaction --no-ansi --no-dev
+RUN . /venv/bin/activate \
+  && poetry build \
+  && pip install dist/multimodal_ja-*-py3-none-any.whl \
   # Clean
+  && rm ./dist/multimodal_ja-*-py3-none-any.whl ./poetry.lock ./pyproject.toml \
   && apt-get -y remove build-essential cmake curl file python$PYTHON_VERSION-dev \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*

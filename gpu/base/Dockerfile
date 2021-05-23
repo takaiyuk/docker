@@ -1,31 +1,41 @@
 FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu18.04 as builder
-ENV PYTHON_VERSION=3.7
+ENV PYTHON_VERSION=3.8
 ENV CUDA_VERSION=10.2
 ENV CUDA_HOME /usr/local/cuda
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${CUDA_HOME}/lib64
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/usr/local/cuda-$CUDA_VERSION/lib64
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/usr/local/lib
-ENV LIGHTGBM_VERSION v3.0.0
+ENV LIGHTGBM_VERSION v3.2.1
 ENV OPENCL_LIBRARIES /usr/local/cuda/lib64
 ENV OPENCL_INCLUDE_DIR /usr/local/cuda/include
 ENV PATH /usr/local/src/lightgbm/LightGBM:${PATH}
+ENV POETRY_VERSION 1.1.6
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 # basic utilities
 RUN apt-get update -y \
+  && apt-get install software-properties-common -y --no-install-recommends && add-apt-repository ppa:ubuntu-toolchain-r/test && apt-get update -y && apt-get upgrade -y && apt-get dist-upgrade -y && apt-get install -y --no-install-recommends libstdc++6 \
   && apt-get install -y --no-install-recommends build-essential bzip2 ca-certificates cmake curl g++ gcc git libboost-filesystem-dev libboost-dev libboost-system-dev libffi-dev libssl-dev python$PYTHON_VERSION python$PYTHON_VERSION-dev python3-pip python3-setuptools virtualenv wget unzip \
   && apt-get install -y --no-install-recommends language-pack-ja-base language-pack-ja \
   && apt-get autoremove -y \
   && apt-get clean -y \
   && rm -rf /var/lib/apt/lists/*
-RUN virtualenv -p python$PYTHON_VERSION ./venv
-# install
-COPY requirements.txt .
 RUN locale-gen en_US.UTF-8 \
-  && . /venv/bin/activate \
-  && pip install -U pip wheel \
-  && pip install -r requirements.txt
+  && virtualenv -p python$PYTHON_VERSION ./venv
+# install
+RUN . /venv/bin/activate \
+  && curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/$POETRY_VERSION/get-poetry.py | python
+ENV PATH /root/.poetry/bin:$PATH
+COPY poetry.lock pyproject.toml ./
+COPY base/ ./base/
+RUN . /venv/bin/activate \
+  && pip install -U pip \
+  && poetry install --no-interaction --no-ansi --no-dev
+RUN . /venv/bin/activate \
+  && poetry build \
+  && pip install dist/base-*-py3-none-any.whl \
+  && rm dist/base-*-py3-none-any.whl poetry.lock pyproject.toml
 # lightgbm
 RUN . /venv/bin/activate \
   && mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd \
@@ -37,13 +47,13 @@ RUN . /venv/bin/activate \
   && /bin/bash -c "cd /usr/local/src/lightgbm/LightGBM/python-package && python setup.py install"
 # build from source
 RUN . /venv/bin/activate \
-  && git clone https://github.com/cocodataset/cocoapi && cd cocoapi/PythonAPI && python setup.py install && cd ../.. && rm -r cocoapi \
+  && git clone https://github.com/cocodataset/cocoapi && cd cocoapi/PythonAPI && make install && cd ../.. && rm -r cocoapi \
   && git clone https://github.com/pfnet-research/xfeat.git && cd xfeat && python setup.py install && cd .. && rm -r xfeat
 
-FROM rapidsai/rapidsai:cuda10.2-base-ubuntu18.04-py3.7 as rapidsai
+FROM rapidsai/rapidsai:cuda10.2-base-ubuntu18.04-py3.8 as rapidsai
 
 FROM nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04 as runner
-ENV PYTHON_VERSION=3.7
+ENV PYTHON_VERSION=3.8
 ENV CUDA_VERSION=10.2
 ENV CUDA_HOME /usr/local/cuda
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${CUDA_HOME}/lib64
@@ -53,7 +63,7 @@ ENV OPENCL_LIBRARIES ${CUDA_HOME}/lib64
 ENV OPENCL_INCLUDE_DIR ${CUDA_HOME}/include
 ENV PATH /usr/local/src/lightgbm/LightGBM:${PATH}
 RUN apt-get update -y \
-  && apt-get install -y --no-install-recommends git python$PYTHON_VERSION unzip vim virtualenv wget zip \
+  && apt-get install -y --no-install-recommends curl git python$PYTHON_VERSION unzip vim virtualenv wget zip \
   && apt-get autoremove -y \
   && apt-get clean -y \
   && rm -rf /var/lib/apt/lists/* \
@@ -69,6 +79,7 @@ COPY --from=builder /usr/lib/x86_64-linux-gnu/libgomp.so.1 $OPENCL_LIBRARIES/lib
 COPY --from=builder /usr/lib/x86_64-linux-gnu/libboost_system.so.1.65.1 $OPENCL_LIBRARIES/libboost_system.so.1.65.1
 COPY --from=builder /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.65.1 $OPENCL_LIBRARIES/libboost_filesystem.so.1.65.1
 COPY --from=builder $CUDA_HOME-$CUDA_VERSION/lib64/libOpenCL.so.1 $CUDA_HOME-$CUDA_VERSION/lib64/libOpenCL.so.1
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libstdc++.so.6 $OPENCL_LIBRARIES/libstdc++.so.6
 # cupy-packages
 COPY --from=rapidsai /conda/envs/rapids/lib/python$PYTHON_VERSION/site-packages/cudf /venv/lib/python$PYTHON_VERSION/site-packages/cudf
 COPY --from=rapidsai /conda/envs/rapids/lib/python$PYTHON_VERSION/site-packages/cupy /venv/lib/python$PYTHON_VERSION/site-packages/cupy
@@ -90,24 +101,13 @@ COPY --from=rapidsai /conda/envs/rapids/lib/libcares.so.2 $CUDA_HOME-$CUDA_VERSI
 COPY --from=rapidsai /conda/envs/rapids/lib/libcudf.so $CUDA_HOME-$CUDA_VERSION/lib64/libcudf.so
 COPY --from=rapidsai /conda/envs/rapids/lib/libgflags.so.2.2 $CUDA_HOME-$CUDA_VERSION/lib64/libgflags.so.2.2
 COPY --from=rapidsai /conda/envs/rapids/lib/libglog.so.0 $CUDA_HOME-$CUDA_VERSION/lib64/libglog.so.0
-COPY --from=rapidsai /conda/envs/rapids/lib/libprotobuf.so.24 $CUDA_HOME-$CUDA_VERSION/lib64/libprotobuf.so.24
+COPY --from=rapidsai /conda/envs/rapids/lib/libprotobuf.so.26 $CUDA_HOME-$CUDA_VERSION/lib64/libprotobuf.so.26
 COPY --from=rapidsai /conda/envs/rapids/lib/libsnappy.so.1 $CUDA_HOME-$CUDA_VERSION/lib64/libsnappy.so.1
 COPY --from=rapidsai /conda/envs/rapids/lib/liburiparser.so $CUDA_HOME-$CUDA_VERSION/lib64/liburiparser.so
-COPY --from=rapidsai /conda/envs/rapids/lib/libcudart.so.10.2 $CUDA_HOME/lib64/libcudart.so.10.1
-COPY --from=rapidsai /conda/envs/rapids/lib/libcudf_ast.so $CUDA_HOME-$CUDA_VERSION/lib64/libcudf_ast.so
-COPY --from=rapidsai /conda/envs/rapids/lib/libcudf_comms.so $CUDA_HOME-$CUDA_VERSION/lib64/libcudf_comms.so
-COPY --from=rapidsai /conda/envs/rapids/lib/libcudf_hash.so $CUDA_HOME-$CUDA_VERSION/lib64/libcudf_hash.so
-COPY --from=rapidsai /conda/envs/rapids/lib/libcudf_interop.so $CUDA_HOME-$CUDA_VERSION/lib64/libcudf_interop.so
-COPY --from=rapidsai /conda/envs/rapids/lib/libcudf_io.so $CUDA_HOME-$CUDA_VERSION/lib64/libcudf_io.so
-COPY --from=rapidsai /conda/envs/rapids/lib/libcudf_join.so $CUDA_HOME-$CUDA_VERSION/lib64/libcudf_join.so
-COPY --from=rapidsai /conda/envs/rapids/lib/libcudf_merge.so $CUDA_HOME-$CUDA_VERSION/lib64/libcudf_merge.so
-COPY --from=rapidsai /conda/envs/rapids/lib/libcudf_partitioning.so $CUDA_HOME-$CUDA_VERSION/lib64/libcudf_partitioning.so
-COPY --from=rapidsai /conda/envs/rapids/lib/libcudf_reductions.so $CUDA_HOME-$CUDA_VERSION/lib64/libcudf_reductions.so
-COPY --from=rapidsai /conda/envs/rapids/lib/libcudf_replace.so $CUDA_HOME-$CUDA_VERSION/lib64/libcudf_replace.so
-COPY --from=rapidsai /conda/envs/rapids/lib/libcudf_reshape.so $CUDA_HOME-$CUDA_VERSION/lib64/libcudf_reshape.so
-COPY --from=rapidsai /conda/envs/rapids/lib/libcudf_rolling.so $CUDA_HOME-$CUDA_VERSION/lib64/libcudf_rolling.so
-COPY --from=rapidsai /conda/envs/rapids/lib/libcudf_transpose.so $CUDA_HOME-$CUDA_VERSION/lib64/libcudf_transpose.so
-COPY --from=rapidsai /conda/envs/rapids/lib/libcudf_base.so $CUDA_HOME-$CUDA_VERSION/lib64/libcudf_base.so
+COPY --from=rapidsai /conda/envs/rapids/lib/libcudart.so.10.2 $CUDA_HOME/lib64/libcudart.so.11.0
+COPY --from=rapidsai /conda/envs/rapids/lib/libaws-c-io.so.1.0.0 $CUDA_HOME-$CUDA_VERSION/lib64/libaws-c-io.so.1.0.0
+COPY --from=rapidsai /conda/envs/rapids/lib/libaws-c-cal.so.1.0.0 $CUDA_HOME-$CUDA_VERSION/lib64/libaws-c-cal.so.1.0.0
+COPY --from=rapidsai /conda/envs/rapids/lib/libs2n.so $CUDA_HOME-$CUDA_VERSION/lib64/libs2n.so
 COPY --from=rapidsai /conda/envs/rapids/lib/libbrotlienc.so.1 $CUDA_HOME-$CUDA_VERSION/lib64/libbrotlienc.so.1
 COPY --from=rapidsai /conda/envs/rapids/lib/libbrotlidec.so.1 $CUDA_HOME-$CUDA_VERSION/lib64/libbrotlidec.so.1
 COPY --from=rapidsai /conda/envs/rapids/lib/liborc.so $CUDA_HOME-$CUDA_VERSION/lib64/liborc.so
@@ -115,7 +115,7 @@ COPY --from=rapidsai /conda/envs/rapids/lib/libaws-cpp-sdk-s3.so $CUDA_HOME-$CUD
 COPY --from=rapidsai /conda/envs/rapids/lib/libaws-cpp-sdk-core.so $CUDA_HOME-$CUDA_VERSION/lib64/libaws-cpp-sdk-core.so
 COPY --from=rapidsai /conda/envs/rapids/lib/libutf8proc.so.2 $CUDA_HOME-$CUDA_VERSION/lib64/libutf8proc.so.2
 COPY --from=rapidsai /conda/envs/rapids/lib/libbrotlicommon.so.1 $CUDA_HOME-$CUDA_VERSION/lib64/libbrotlicommon.so.1
-COPY --from=rapidsai /conda/envs/rapids/lib/libcurl.so.4 $CUDA_HOME-$CUDA_VERSION/lib64/libcurl.so.4
+# COPY --from=rapidsai /conda/envs/rapids/lib/libcurl.so.4 $CUDA_HOME-$CUDA_VERSION/lib64/libcurl.so.4
 COPY --from=rapidsai /conda/envs/rapids/lib/libaws-c-event-stream.so.0unstable $CUDA_HOME-$CUDA_VERSION/lib64/libaws-c-event-stream.so.0unstable
 COPY --from=rapidsai /conda/envs/rapids/lib/libaws-c-common.so.1 $CUDA_HOME-$CUDA_VERSION/lib64/libaws-c-common.so.1
 COPY --from=rapidsai /conda/envs/rapids/lib/libssh2.so.1 $CUDA_HOME-$CUDA_VERSION/lib64/libssh2.so.1
@@ -124,7 +124,7 @@ COPY --from=rapidsai /conda/envs/rapids/lib/libaws-checksums.so.1.0.0 $CUDA_HOME
 COPY --from=rapidsai /conda/envs/rapids/lib/liblz4.so $CUDA_HOME-$CUDA_VERSION/lib64/liblz4.so
 COPY --from=rapidsai /conda/envs/rapids/lib/libarrow_dataset.so.100 $CUDA_HOME-$CUDA_VERSION/lib64/libarrow_dataset.so.100
 COPY --from=rapidsai /conda/envs/rapids/lib/libparquet.so.100 $CUDA_HOME-$CUDA_VERSION/lib64/libparquet.so.100
-COPY --from=rapidsai /conda/envs/rapids/lib/libthrift.so.0.13.0 $CUDA_HOME-$CUDA_VERSION/lib64/libthrift.so.0.13.0
+COPY --from=rapidsai /conda/envs/rapids/lib/libthrift.so.0.14.1 $CUDA_HOME-$CUDA_VERSION/lib64/libthrift.so.0.14.1
 COPY --from=rapidsai /conda/envs/rapids/lib/libcuml++.so $CUDA_HOME-$CUDA_VERSION/lib64/libcuml++.so
 COPY --from=rapidsai /conda/envs/rapids/lib/libcumlprims.so $CUDA_HOME-$CUDA_VERSION/lib64/libcumlprims.so
 COPY --from=rapidsai /conda/envs/rapids/lib/libfaiss.so $CUDA_HOME-$CUDA_VERSION/lib64/libfaiss.so
@@ -132,5 +132,4 @@ COPY --from=rapidsai /conda/envs/rapids/lib/libfaiss.so /opt/conda/envs/rapids/l
 COPY --from=rapidsai /conda/envs/rapids/lib/libtreelite.so $CUDA_HOME-$CUDA_VERSION/lib64/libtreelite.so
 COPY --from=rapidsai /conda/envs/rapids/lib/libblas.so.3 $CUDA_HOME-$CUDA_VERSION/lib64/libblas.so.3
 COPY --from=rapidsai /conda/envs/rapids/lib/liblapack.so.3 $CUDA_HOME-$CUDA_VERSION/lib64/liblapack.so.3
-COPY --from=rapidsai /conda/envs/rapids/lib/libgfortran.so.4 $CUDA_HOME-$CUDA_VERSION/lib64/libgfortran.so.4
 COPY --from=rapidsai /conda/envs/rapids/lib/libquadmath.so.0 $CUDA_HOME-$CUDA_VERSION/lib64/libquadmath.so.0
